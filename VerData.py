@@ -44,7 +44,7 @@ data_nan = df_vacunacion.isna()
 df_vacunacion = df_vacunacion.dropna()
 
 ## Eliminar comillas dobles al los extremos del texto
-df_vacunacion = df_vacunacion.applymap(lambda x: str(x).replace('"', ''))
+df_vacunacion = df_vacunacion.map(lambda x: str(x).replace('"', ''))
 df_vacunacion.columns = [col.strip('"') for col in df_vacunacion.columns]
 
 ## Eliminar columnas sobrantes
@@ -73,14 +73,13 @@ duplicated_count = duplicated_rows.groupby(duplicated_rows.columns.tolist()).siz
 ## Eliminar espacios en blanco al principio y final de los nombres de columnas
 df_vacunacion.columns = df_vacunacion.columns.str.strip()
 
+df_vacunacion_apellidos = df_vacunacion['PrimerApellido']
+
 ## Eliminar espacios en blanco al principio y final de los valores en las celdas
-df_vacunacion = df_vacunacion.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+df_vacunacion = df_vacunacion.map(lambda x: x.strip() if isinstance(x, str) else x)
 
 ## Eliminar duplicados en base a la columna 'Documento', manteniendo la primera aparición
-df_vacunacion = df_vacunacion.drop_duplicates(subset=['Documento'], keep='first')
-
-## Verificar si los duplicados fueron eliminados
-print(df_vacunacion)
+df_vacunacion = df_vacunacion.drop_duplicates(keep='first')
 
 ## Contar los registros donde "FechaNacimiento" es igual a ""
 sin_fecha_nacimiento_count = df_vacunacion[df_vacunacion['FechaNacimiento'] == ""].shape[0]
@@ -90,3 +89,10 @@ df_sin_fecha_nacimiento = df_vacunacion[df_vacunacion['FechaNacimiento'] == ""]
 
 ## Eliminar los registros donde "FechaNacimiento" es igual a ""
 df_vacunacion = df_vacunacion[df_vacunacion['FechaNacimiento'] != ""]
+
+## Conocer la cantidad de personas sin grupo etnico
+sin_grupo_etnico_count = df_vacunacion[df_vacunacion['GrupoEtnico'] == ""].shape[0]
+
+## Sobreescribir los registros con "Ninguno de los anteriores". Donde "GrupoEtnico" es igual a ""
+df_vacunacion.loc[df_vacunacion['GrupoEtnico'].str.strip() == '', 'GrupoEtnico'] = 'Ninguno de los anteriores'
+
