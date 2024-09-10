@@ -2,7 +2,6 @@ import csv
 import pandas as pd
 import unicodedata
 
-
 # Función para convertir archivo de texto a CSV
 def convert_txt_to_csv(txt_file, csv_file):
     with open(txt_file, 'r') as file:
@@ -70,14 +69,6 @@ df_vacunacion = df_vacunacion.drop(columns=[
 data_duplicate = df_vacunacion.duplicated(subset=['Documento'], keep='first').sum()
 duplicated_rows = df_vacunacion[df_vacunacion.duplicated(keep=False)]
 duplicated_count = duplicated_rows.groupby(duplicated_rows.columns.tolist()).size().reset_index(name='counts')
-
-df_vacunacion.columns = df_vacunacion.columns.str.strip()
-
-# Eliminar espacios en blanco al principio y final de los valores en las celdas
-df_vacunacion = df_vacunacion.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
-# Eliminar duplicados en base a la columna 'Documento', manteniendo la primera aparición
-df_vacunacion = df_vacunacion.drop_duplicates(subset=['Documento'], keep='first')
 
 ## Eliminar espacios en blanco al principio y final de los nombres de columnas
 df_vacunacion.columns = df_vacunacion.columns.str.strip()
