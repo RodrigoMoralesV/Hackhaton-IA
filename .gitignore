@@ -1,3 +1,4 @@
-csv/*
+csv/data_vacunacion.csv
 
-data/*
+data/data_test.txt
+data/Dataset_vacunacion.txt
