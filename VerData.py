@@ -96,3 +96,8 @@ sin_grupo_etnico_count = df_vacunacion[df_vacunacion['GrupoEtnico'] == ""].shape
 ## Sobreescribir los registros con "Ninguno de los anteriores". Donde "GrupoEtnico" es igual a ""
 df_vacunacion.loc[df_vacunacion['GrupoEtnico'].str.strip() == '', 'GrupoEtnico'] = 'Ninguno de los anteriores'
 
+# Crear un diccionario para mapear los valores
+sex_map = {'Hombre': 1, 'Mujer': 2}
+
+# Aplicar la transformación
+df_vacunacion['Sexo'] = df_vacunacion['Sexo'].map(sex_map)
