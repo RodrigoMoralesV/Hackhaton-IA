@@ -3,38 +3,39 @@ import pandas as pd
 import unicodedata
 
 # Función para convertir archivo de texto a CSV
-def convert_txt_to_csv(txt_file, csv_file):
-    with open(txt_file, 'r') as file:
-        content = file.read()
+# def convert_txt_to_csv(txt_file, csv_file):
+#     with open(txt_file, 'r') as file:
+#         content = file.read()
         
-    # Separar el contenido por el carácter '|' para obtener las filas
-    rows = content.split('\n')
-    
-    # Extraer los encabezados de la primera fila
-    headers = rows[0].split('|')
-    
-    # Crear el archivo CSV y escribir los datos
-    with open(csv_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(headers)
+#     # Eliminar todas las comillas dobles y simples del contenido
+#     content = content.replace('"', '').replace("'", '')
         
-        for row in rows[1:]:
-            values = row.split('|')
-            writer.writerow(values)
+#     # Separar el contenido por el carácter '|' para obtener las filas
+#     rows = content.split('\n')
+    
+#     # Extraer los encabezados de la primera fila
+#     headers = rows[0].split('|')[:-1]
+    
+#     # Crear el archivo CSV y escribir los datos
+#     with open(csv_file, 'w', newline='') as csvfile:
+#         writer = csv.writer(csvfile)
+#         writer.writerow(headers)
+        
+#         for row in rows[1:]:
+#             values = row.split('|')[:-1]
+#             writer.writerow(values)
 
-    print(f"Archivo CSV generado: {csv_file}")
+#     print(f"Archivo CSV generado: {csv_file}")
 
 
 # Ejemplo de uso
-convert_txt_to_csv('data/data_test.txt', 'csv/data_vacunacion.csv')
+# convert_txt_to_csv('data/data_test.txt', 'csv/data_vacunacion.csv')
 
 # Ruta del archivo
 path_file = 'csv/data_vacunacion.csv'
 
-# Leer el CSV generado
-df_vacunacion = pd.read_csv(path_file, sep=',')
-
-# LIMPIEZA DE DATOS
+# Leer el CSV generado 'utf-8', 'latin1', 'ISO-8859-1'
+df_vacunacion = pd.read_csv(path_file, sep=',', encoding = 'LATIN1')
 
 ## Obtener el numero de campos nulos
 data_null = df_vacunacion.isnull()
@@ -44,8 +45,8 @@ data_nan = df_vacunacion.isna()
 df_vacunacion = df_vacunacion.dropna()
 
 ## Eliminar comillas dobles al los extremos del texto
-df_vacunacion = df_vacunacion.map(lambda x: str(x).replace('"', ''))
-df_vacunacion.columns = [col.strip('"') for col in df_vacunacion.columns]
+# df_vacunacion = df_vacunacion.map(lambda x: str(x).replace('"', ''))
+# df_vacunacion.columns = [col.strip('"') for col in df_vacunacion.columns]
 
 ## Eliminar columnas sobrantes
 df_vacunacion = df_vacunacion.drop(columns=[
@@ -101,3 +102,5 @@ sex_map = {'Hombre': 1, 'Mujer': 2}
 
 # Aplicar la transformación
 df_vacunacion['Sexo'] = df_vacunacion['Sexo'].map(sex_map)
+
+# 
