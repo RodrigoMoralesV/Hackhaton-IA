@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_error
 from datetime import datetime, timedelta
 
 # Cargar los datos del CSV
-df_vacunacion = pd.read_csv("csv/Dataset_vacunacion_clean.csv", sep='|')
+df_vacunacion = pd.read_csv("csv/Dataset_vacunacion_normalizada.csv", sep='|')
 
 # Verificar las columnas del DataFrame
 print("Columnas en df_vacunacion:")
@@ -15,11 +15,14 @@ print(df_vacunacion.columns)
 print("\nPrimeras filas de df_vacunacion:")
 print(df_vacunacion.head())
 
-# Preparar los datos
-fecha_referencia = datetime(1900, 1, 1)
-df_vacunacion['FechaNacimiento'] = pd.to_datetime(df_vacunacion['FechaNacimiento'], errors='coerce')
-df_vacunacion['dias_desde_referencia'] = (df_vacunacion['FechaNacimiento'] - fecha_referencia).dt.days
+# Convertir la columna 'FechaNacimiento' al formato deseado (solo fecha, sin hora)
+df_vacunacion['FechaNacimiento'] = pd.to_datetime(df_vacunacion['FechaNacimiento'], errors='coerce').dt.date
 
+# Continuar con la conversión de 'dias_desde_referencia'
+fecha_referencia = datetime(1900, 1, 1)
+df_vacunacion['dias_desde_referencia'] = (pd.to_datetime(df_vacunacion['FechaNacimiento']) - fecha_referencia).dt.days
+
+# Preparar los datos
 le = LabelEncoder()
 df_vacunacion['TipoIdentificacion_encoded'] = le.fit_transform(df_vacunacion['TipoIdentificacion'])
 
@@ -46,19 +49,25 @@ def predecir_fecha_nacimiento(tipo_documento, numero_documento):
     dias_predichos = model.predict([[tipo_encoded, numero_documento]])
     return fecha_referencia + timedelta(days=int(dias_predichos[0]))
 
-# Predecir fechas faltantes
+# Predecir fechas faltantes y guardarlas en la columna 'FechaNacimiento_predicha'
 df_vacunacion['FechaNacimiento_predicha'] = df_vacunacion.apply(
     lambda row: predecir_fecha_nacimiento(row['TipoIdentificacion'], row['Documento'])
     if pd.isnull(row['FechaNacimiento']) else row['FechaNacimiento'],
     axis=1
 )
 
-# Mostrar ejemplos de predicciones
-print("\nEjemplos de predicciones:")
-ejemplos = df_vacunacion[df_vacunacion['FechaNacimiento'].isnull()].head(5)
+# Reemplazar los valores NaN en 'FechaNacimiento' con los de 'FechaNacimiento_predicha'
+df_vacunacion['FechaNacimiento'] = df_vacunacion['FechaNacimiento'].fillna(df_vacunacion['FechaNacimiento_predicha'])
+
+# Asegurarse de que las fechas tengan el formato AAAA-MM-DD
+df_vacunacion['FechaNacimiento'] = pd.to_datetime(df_vacunacion['FechaNacimiento']).dt.strftime('%Y-%m-%d')
+
+# Mostrar ejemplos de las fechas actualizadas
+print("\nEjemplos de registros con fechas actualizadas:")
+ejemplos = df_vacunacion[df_vacunacion['FechaNacimiento_predicha'].notnull()].head(5)
 for _, row in ejemplos.iterrows():
     print(f"Tipo: {row['TipoIdentificacion']}, Número: {row['Documento']}")
-    print(f"Fecha de nacimiento predicha: {row['FechaNacimiento_predicha'].strftime('%Y-%m-%d')}")
+    print(f"Fecha de nacimiento actualizada: {row['FechaNacimiento']}")
     print("---")
 
 # Analizar importancia de características
@@ -80,3 +89,5 @@ print(f"Porcentaje de registros predichos: {(registros_sin_fecha/total_registros
 # Guardar el DataFrame actualizado
 df_vacunacion.to_csv("csv/datos_vacunacion_actualizados.csv", index=False, sep='|')
 print("\nDataFrame actualizado guardado en 'datos_vacunacion_actualizados.csv'")
+
+df_actualizado = pd.read_csv("csv/datos_vacunacion_actualizados.csv", sep = '|')

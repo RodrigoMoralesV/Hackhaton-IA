@@ -11,7 +11,7 @@ import pandas as pd
 path_file = 'csv/Dataset_vacunacion_clean.csv'
 
 # Instanciar DF
-df_vacunacion = pd.read_csv(path_file, sep = '|')
+df_vacunacion = pd.read_csv(path_file, sep = '|', encoding = 'latin1')
 
 # Reemplazar datos na en la columna GrupoEtnico por "Ninguno de los anteriores"
 df_vacunacion['GrupoEtnico'] = df_vacunacion['GrupoEtnico'].fillna('Ninguno de los anteriores')
@@ -23,4 +23,4 @@ sex_map = {'Hombre': 1, 'Mujer': 2}
 df_vacunacion['Sexo'] = df_vacunacion['Sexo'].map(sex_map)
 
 # Generar archivo CSV con data normalizada
-df_vacunacion.to_csv('csv/Dataset_vacunacion_normalizada.csv')
+df_vacunacion.to_csv('csv/Dataset_vacunacion_normalizada.csv', sep = '|')

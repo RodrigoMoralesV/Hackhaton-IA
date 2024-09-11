@@ -37,3 +37,5 @@ def eliminar_comillas_y_convertir_a_csv(archivo_txt, archivo_csv):
 
 # Llamar a la función pasando el nombre del archivo .txt y el nombre del archivo .csv
 eliminar_comillas_y_convertir_a_csv('data/Dataset_vacunacion.txt', 'csv/Dataset_vacunacion_clean.csv')
+
+# Despues de esto, abre el csv y quita manualmente los backslashs (\)
