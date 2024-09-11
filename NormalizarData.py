@@ -23,4 +23,4 @@ sex_map = {'Hombre': 1, 'Mujer': 2}
 df_vacunacion['Sexo'] = df_vacunacion['Sexo'].map(sex_map)
 
 # Generar archivo CSV con data normalizada
-df_vacunacion.to_csv('csv/Dataset_vacunacion_normalizada.csv', sep = '|')
+df_vacunacion.to_csv('csv/Dataset_vacunacion_normalizada.csv', sep = '|', index = False, encoding = 'latin1')
