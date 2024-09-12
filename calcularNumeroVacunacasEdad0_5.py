@@ -121,6 +121,33 @@ print(df_fre[['tipoidentificacion', 'total_vacunas', 'dias_entre_vacunas', 'frec
 
 
 ###############################################################################################
+#                    Calcular el numero de dias entre cada vacunación                         #
+###############################################################################################
+
+# Aseguramos que las columnas de vacunas sean tipo datetime (esto incluye manejar NaT)
+df_fre[columnas_vacunas] = df_fre[columnas_vacunas].apply(pd.to_datetime, errors='coerce')
+
+# Función para calcular los días entre cada vacunación, manejando valores NaT
+def dias_entre_vacunas(row):
+    # Extraemos las fechas de vacunación del registro, omitiendo las que son NaT
+    fechas_vacunas = row[columnas_vacunas].dropna().sort_values()
+    
+    # Verificamos que haya al menos 2 fechas de vacunación válidas
+    if len(fechas_vacunas) > 1:
+        # Calculamos la diferencia en días entre cada vacuna consecutiva
+        dias_entre = fechas_vacunas.diff().dt.days.dropna()
+        return dias_entre.values  # Convertimos a array de numpy para mantener consistencia
+    else:
+        return np.nan  # Retornamos NaN si no hay suficientes vacunas válidas para comparar
+
+# Aplicamos la función a cada fila para calcular los días entre cada vacunación
+df_fre['dias_entre_cada_vacuna'] = df_fre.apply(dias_entre_vacunas, axis=1)
+
+# Verificamos los resultados
+print(df_fre[['tipoidentificacion', 'dias_entre_cada_vacuna']].head())
+
+
+###############################################################################################
 #                        Generar CSV SOLO POR AHORA CAMBIAR A TABLA                           #
 ###############################################################################################
 
