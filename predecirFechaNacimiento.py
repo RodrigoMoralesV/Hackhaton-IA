@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_error
 from datetime import datetime, timedelta
 
 # Cargar los datos del CSV
-df_vacunacion = pd.read_csv("csv/Dataset_vacunacion_normalizada.csv", sep='|')
+df_vacunacion = pd.read_csv("csv/Dataset_vacunacion_normalizada.csv", sep='|', index_col=False, encoding='latin1')
 
 # Verificar las columnas del DataFrame
 print("Columnas en df_vacunacion:")
@@ -85,6 +85,8 @@ print(f"\nTotal de registros: {total_registros}")
 print(f"Registros con fecha de nacimiento: {registros_con_fecha}")
 print(f"Registros sin fecha de nacimiento (predichos): {registros_sin_fecha}")
 print(f"Porcentaje de registros predichos: {(registros_sin_fecha/total_registros)*100:.2f}%")
+
+print(df_vacunacion.index)
 
 # Guardar el DataFrame actualizado
 df_vacunacion.to_csv("csv/datos_vacunacion_actualizados.csv", index=False, sep='|')

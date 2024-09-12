@@ -1,46 +1,73 @@
 import pandas as pd
 import numpy as np
+import psycopg2
+from psycopg2.extras import execute_values
 
-# Ubicación del archivo
-path_file = 'data/data_mart_frecuencia_vacunacion.csv'
+dbname = 'db_vacunacion'
+user = "postgres"
+password = "1234"
+host = "localhost"
+port = "5432"
 
-# Lectura del archivo
-df = pd.read_csv(path_file, sep='|', encoding='latin1')
+data= {}
+
+try:
+    conn = psycopg2.connect(
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port
+    )
+    
+    print('Conexión exitosa')
+    
+    query = """select 
+                    tipoidentificacion,
+                    fechanacimiento, 
+                    nombremunicipioresidencia,
+                    discapacitado,
+                    covid_sinovac_primera,
+                    covid_sinovac_segunda,
+                    covid_sinovac_refuerzo,
+                    covid_sinovac_primer_refuerzo,
+                    covid_sinovac_segundo_refuerzo,
+                    covid_pfizer_primera,
+                    covid_pfizer_segunda,
+                    covid_pfizer_refuerzo,
+                    covid_pfizer_primer_refuerzo,
+                    covid_pfizer_segundo_refuerzo,
+                    covid_moderna_primera,
+                    covid_moderna_segunda,
+                    covid_moderna_refuerzo,
+                    covid_moderna_primer_refuerzo,
+                    covid_moderna_segundo_refuerzo,
+                    covid_janssen_unica,
+                    covid_janssen_segunda,
+                    covid_janssen_refuerzo,
+                    covid_janssen_primer_refuerzo,
+                    covid_janssen_segundo_refuerzo,
+                    covid_astrazeneca_primera,
+                    covid_astrazeneca_segunda,
+                    covid_astrazeneca_refuerzo,
+                    covid_astrazeneca_primer_refuerzo,
+                    covid_astrazeneca_segundo_refuerzo,
+                    covid_moderna_pediatrica_primera,
+                    covid_moderna_pediatrica_segunda,
+                    covid_pfizer_adicional
+                from 
+                	data_lake_fecha_predicha
+            """
+            
+    data = pd.read_sql_query(query, conn)
+    
+except Exception as e:
+    print(f"Error al conectarse a la base de datos: {e}")
 
 # Declarar columnas a extraer
-columnas_extraidas = [
-    'tipoidentificacion',
-    'fechanacimiento', 'covid_sinovac_primera',
-    'covid_sinovac_segunda',
-    'covid_sinovac_refuerzo',
-    'covid_sinovac_primer_refuerzo',
-    'covid_sinovac_segundo_refuerzo',
-    'covid_pfizer_primera',
-    'covid_pfizer_segunda',
-    'covid_pfizer_refuerzo',
-    'covid_pfizer_primer_refuerzo',
-    'covid_pfizer_segundo_refuerzo',
-    'covid_moderna_primera',
-    'covid_moderna_segunda',
-    'covid_moderna_refuerzo',
-    'covid_moderna_primer_refuerzo',
-    'covid_moderna_segundo_refuerzo',
-    'covid_janssen_unica',
-    'covid_janssen_segunda',
-    'covid_janssen_refuerzo',
-    'covid_janssen_primer_refuerzo',
-    'covid_janssen_segundo_refuerzo',
-    'covid_astrazeneca_primera',
-    'covid_astrazeneca_segunda',
-    'covid_astrazeneca_refuerzo',
-    'covid_astrazeneca_primer_refuerzo',
-    'covid_astrazeneca_segundo_refuerzo',
-    'covid_moderna_pediatrica_primera',
-    'covid_moderna_pediatrica_segunda',
-    'covid_pfizer_adicional']
 
 # Obtener las columnas son necesarias
-df_fre = df[columnas_extraidas]
+df_fre = data
 
 # Declarar las vacunas a analizar
 columnas_vacunas = ['covid_sinovac_primera',
@@ -77,7 +104,7 @@ columnas_vacunas = ['covid_sinovac_primera',
 ###############################################################################################
 
 # Aseguramos que las fechas sean tipo datetime
-df_fre.loc[:, 'fechanacimiento'] = pd.to_datetime(df['fechanacimiento'], errors='coerce')
+df_fre.loc[:, 'fechanacimiento'] = pd.to_datetime(data['fechanacimiento'], errors='coerce')
 
 # Convertimos las columnas de vacunas a tipo datetime
 df_fre[columnas_vacunas] = df_fre[columnas_vacunas].apply(pd.to_datetime, errors='coerce')
@@ -130,13 +157,25 @@ df_fre[columnas_vacunas] = df_fre[columnas_vacunas].apply(pd.to_datetime, errors
 # Función para calcular los días entre cada vacunación, manejando valores NaT
 def dias_entre_vacunas(row):
     # Extraemos las fechas de vacunación del registro, omitiendo las que son NaT
-    fechas_vacunas = row[columnas_vacunas].dropna().sort_values()
+    fechas_vacunas = row[columnas_vacunas].dropna()
     
     # Verificamos que haya al menos 2 fechas de vacunación válidas
     if len(fechas_vacunas) > 1:
+        # Ordenamos las fechas
+        fechas_ordenadas = fechas_vacunas.sort_values()
+        
         # Calculamos la diferencia en días entre cada vacuna consecutiva
-        dias_entre = fechas_vacunas.diff().dt.days.dropna()
-        return dias_entre.values  # Convertimos a array de numpy para mantener consistencia
+        dias_entre = fechas_ordenadas.diff().dt.days.dropna()
+        
+        # Creamos una lista para almacenar los resultados
+        resultados = []
+        
+        # Iteramos sobre las diferencias y los nombres de las columnas
+        for (idx, dias), (col1, col2) in zip(dias_entre.items(), zip(fechas_ordenadas.index[:-1], fechas_ordenadas.index[1:])):
+            resultados.append(f"{col1} a {col2}: {dias} días")
+        
+        # Convertimos la lista en una cadena de texto separada por comas
+        return ', '.join(resultados)
     else:
         return np.nan  # Retornamos NaN si no hay suficientes vacunas válidas para comparar
 
@@ -153,4 +192,4 @@ print(df_fre[['tipoidentificacion', 'dias_entre_cada_vacuna']].head())
 
 df_fre.to_csv('csv/data_mart_frecuencia_vacunacion.csv', sep = '|', index = False, encoding = 'latin1')
 
-df_mart = pd.read_csv("csv/data_mart_frecuencia_vacunacion.csv", sep = '|')
+df_mart = pd.read_csv("csv/data_mart_frecuencia_vacunacion.csv", sep = '|', encoding = 'latin1')
