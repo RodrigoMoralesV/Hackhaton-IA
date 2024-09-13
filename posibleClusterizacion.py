@@ -16,6 +16,8 @@ df_fre['frecuencia_general'].fillna(0, inplace=True)
 scaler = StandardScaler()
 df_fre['frecuencia_general_scaled'] = scaler.fit_transform(df_fre[['frecuencia_general']])
 
+df_fre.head()
+
 # Aplicar K-Means con diferentes números de clusters (1 a 15)
 inertia = []
 for k in range(1, 16):

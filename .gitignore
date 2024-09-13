@@ -4,3 +4,4 @@ data/Dataset_vacunacion_2.txt
 data/data_test.txt
 data/Dataset_vacunacion.txt
 data/*.csv
+.env
