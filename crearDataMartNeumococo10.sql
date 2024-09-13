@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS data_mart_neumococo_10 (
     ultima_vacuna DATE,
     dias_entre_vacunas DECIMAL,
     frecuencia_vacunacion DECIMAL,
-	frecuencia_nacimiento_primera,
-	frecuencia_primera_segunda,
-	frecuencia_segunda_tercera,
-	frecuencia_general
+	frecuencia_nacimiento_primera TEXT,
+	frecuencia_primera_segunda TEXT,
+	frecuencia_segunda_tercera TEXT,
+	frecuencia_general TEXT
 );
 
 COPY public.data_mart_neumococo_10(

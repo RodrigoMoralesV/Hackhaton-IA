@@ -101,7 +101,7 @@ print(df_fre[['tipoidentificacion', 'total_vacunas', 'dias_entre_vacunas', 'frec
 
 
 ###############################################################################################
-#                    Calcular el numero de dias entre cada vacunación                         #
+#                             Calcular frecuencia entre distintas fechas                      #
 ###############################################################################################
 
 # Aseguramos que las columnas sean tipo datetime (esto incluye manejar NaT)

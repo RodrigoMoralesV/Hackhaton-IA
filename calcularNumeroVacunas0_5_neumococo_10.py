@@ -101,42 +101,56 @@ print(df_fre[['tipoidentificacion', 'total_vacunas', 'dias_entre_vacunas', 'frec
 
 
 ###############################################################################################
-#                    Calcular el numero de dias entre cada vacunación                         #
+#                             Calcular frecuencia entre distintas fechas                      #
 ###############################################################################################
 
-# Aseguramos que las columnas de vacunas sean tipo datetime (esto incluye manejar NaT)
+# Aseguramos que las columnas sean tipo datetime (esto incluye manejar NaT)
+df_fre['fechanacimiento'] = pd.to_datetime(df_fre['fechanacimiento'], errors='coerce')
 df_fre[columnas_vacunas] = df_fre[columnas_vacunas].apply(pd.to_datetime, errors='coerce')
 
-# Función para calcular los días entre cada vacunación, manejando valores NaT
-def dias_entre_vacunas(row):
-    # Extraemos las fechas de vacunación del registro, omitiendo las que son NaT
-    fechas_vacunas = row[columnas_vacunas].dropna()
+# Función para calcular la frecuencia de vacunación
+def calcular_frecuencia(fecha_inicio, fecha_fin):
+    dias = (fecha_fin - fecha_inicio).dt.days
+    return np.where(dias > 0, 1 / dias, np.nan)
 
-    # Verificamos que haya al menos 2 fechas de vacunación válidas
-    if len(fechas_vacunas) > 1:
-        # Ordenamos las fechas
-        fechas_ordenadas = fechas_vacunas.sort_values()
+# Calcular frecuencias
+df_fre['frecuencia_nacimiento_primera'] = calcular_frecuencia(
+    df_fre['fechanacimiento'], 
+    df_fre['neumococo_conjugado_10_valente_primera']
+)
 
-        # Calculamos la diferencia en días entre cada vacuna consecutiva
-        dias_entre = fechas_ordenadas.diff().dt.days.dropna()
+df_fre['frecuencia_primera_segunda'] = calcular_frecuencia(
+    df_fre['neumococo_conjugado_10_valente_primera'], 
+    df_fre['neumococo_conjugado_10_valente_segunda']
+)
 
-        # Creamos una lista para almacenar los resultados
-        resultados = []
+df_fre['frecuencia_segunda_refuerzo'] = calcular_frecuencia(
+    df_fre['neumococo_conjugado_10_valente_segunda'], 
+    df_fre['neumococo_conjugado_10_valente_refuerzo']
+)
 
-        # Iteramos sobre las diferencias y los nombres de las columnas
-        for (idx, dias), (col1, col2) in zip(dias_entre.items(), zip(fechas_ordenadas.index[:-1], fechas_ordenadas.index[1:])):
-            resultados.append(f"{col1} a {col2}: {dias} días")
-
-        # Convertimos la lista en una cadena de texto separada por comas
-        return ', '.join(resultados)
+###############################################################################################
+#                 Calcular la frecuencia general del esquema de vacunación                    #
+###############################################################################################
+def calcular_frecuencia_general(row):
+    frecuencias = [row['frecuencia_nacimiento_primera'], 
+                   row['frecuencia_primera_segunda'], 
+                   row['frecuencia_segunda_refuerzo']]
+    frecuencias_validas = [f for f in frecuencias if pd.notna(f)]
+    
+    if len(frecuencias_validas) > 0:
+        # Calculamos un promedio ponderado
+        # La primera frecuencia tiene peso 1, la segunda peso 2, y la tercera peso 3
+        pesos = list(range(1, len(frecuencias_validas) + 1))
+        return np.average(frecuencias_validas, weights=pesos)
     else:
-        return np.nan  # Retornamos NaN si no hay suficientes vacunas válidas para comparar
+        return np.nan
 
-# Aplicamos la función a cada fila para calcular los días entre cada vacunación
-df_fre['dias_entre_cada_vacuna'] = df_fre.apply(dias_entre_vacunas, axis=1)
+df_fre['frecuencia_general'] = df_fre.apply(calcular_frecuencia_general, axis=1)
 
 # Verificamos los resultados
-print(df_fre[['tipoidentificacion', 'dias_entre_cada_vacuna']].head())
+print(df_fre[['tipoidentificacion', 'frecuencia_nacimiento_primera', 'frecuencia_primera_segunda', 
+              'frecuencia_segunda_refuerzo', 'frecuencia_general']].head())
 
 
 ###############################################################################################
